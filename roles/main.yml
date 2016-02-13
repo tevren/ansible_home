@@ -1,8 +1,0 @@
----
-- name: build snapraid from source in a container
-  include: build-src.yml
-
-- name: install snapraid config
-  template:
-    src: "etc/snapraid.j2"
-    dest: "/etc/snapraid.conf"
