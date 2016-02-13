@@ -1,0 +1,51 @@
+---
+- name: install prereqs
+  apt: name={{ item }} update_cache=yes cache_valid_time=3600
+  with_items:
+   - gcc 
+   - git
+   - make
+   - checkinstall
+  retries: 3
+  
+- name: create temporary build directory
+  file: dest=/tmp/snapraid/ state=directory
+
+- name: fetch source
+  get_url: url=https://github.com/amadvance/snapraid/releases/download/v{{ snapraidversion }}/snapraid-{{ snapraidversion }}.tar.gz dest=/tmp/snapraid/snapraid-{{ snapraidversion }}.tar.gz mode=0640
+
+- name: unarchive source
+  unarchive: src=/tmp/snapraid/snapraid-{{ snapraidversion }}.tar.gz dest=/tmp/snapraid/ copy=no
+
+- name: configure
+  command: ./configure
+  args:
+    chdir: /tmp/snapraid/snapraid-{{ snapraidversion }}/ 
+    creates: /tmp/snapraid/snapraid-{{ snapraidversion }}/Makefile
+
+- name: make
+  command: make -j8
+  args:
+    chdir: /tmp/snapraid/snapraid-{{ snapraidversion }}/
+    creates: /tmp/snapraid/snapraid-{{ snapraidversion }}/snapraid
+
+- name: test
+  command: make -j8 check
+  args:
+    chdir: /tmp/snapraid/snapraid-{{ snapraidversion }}/
+    creates: /tmp/snapraid/snapraid-{{ snapraidversion }}/snapraid
+
+- name: build deb
+  command: checkinstall -Dy --install=no --nodoc 
+  args:
+    chdir: /tmp/snapraid/snapraid-{{ snapraidversion }}/
+    creates: /tmp/snapraid/snapraid-{{ snapraidversion }}/snapraid_{{ snapraidversion }}-1_amd64.deb
+
+- name: install
+  apt: deb=/tmp/snapraid/snapraid-{{ snapraidversion }}/snapraid_{{ snapraidversion }}-1_amd64.deb
+
+- name: cleanup
+  command: rm -rf /tmp/snapraid
+
+
+

@@ -1,0 +1,31 @@
+---
+- name: install prereqs
+  apt: name={{ item }} update_cache=yes cache_valid_time=3600
+  with_items:
+   - g++ 
+   - pkg-config 
+   - git 
+   - git-buildpackage 
+   - pandoc 
+   - debhelper 
+   - libfuse-dev 
+   - libattr1-dev 
+   - python
+  retries: 3
+
+- name: fetch source
+  git: repo=https://github.com/trapexit/mergerfs.git
+       dest=/tmp/mergerfs
+
+- name: make deb
+  command: make deb
+  args:
+    chdir: /tmp/mergerfs
+    creates: /tmp/mergerfs_{{mergerfsversion }}-g{{mergerfscommit}}~debian-jessie_amd64.deb
+
+- name: install
+  apt: deb=/tmp/mergerfs_{{mergerfsversion }}-g{{mergerfscommit}}~debian-jessie_amd64.deb
+
+- name: cleanup
+  command: rm -rf /tmp/mergerfs
+

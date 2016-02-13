@@ -1,0 +1,10 @@
+---
+- name: check if mergerfs is installed (changed=not)
+  command: dpkg-query -W mergerfs
+  register: pkg_check
+  failed_when: pkg_check.rc > 1
+  changed_when: pkg_check.rc == 1
+
+- name: build mergerfs from source in a container
+  include: build-src.yml
+  when: pkg_check.rc == 1
