@@ -16,6 +16,7 @@
 - name: fetch source
   git: repo=https://github.com/trapexit/mergerfs.git
        dest=/tmp/mergerfs
+       version={{mergerfsversion }}
 
 - name: make deb
   command: make deb
@@ -24,7 +25,7 @@
     creates: /tmp/mergerfs_{{mergerfsversion }}-g{{mergerfscommit}}~debian-jessie_amd64.deb
 
 - name: install
-  apt: deb=/tmp/mergerfs_{{mergerfsversion }}-g{{mergerfscommit}}~debian-jessie_amd64.deb
+  apt: deb=/tmp/mergerfs_{{mergerfsversion }}~debian-jessie_amd64.deb
 
 - name: cleanup
   command: rm -rf /tmp/mergerfs
