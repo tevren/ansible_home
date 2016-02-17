@@ -7,5 +7,4 @@
   roles:
     - snapraid
     - mergerfs
-    - docker
-    - mesos
+    - storage
