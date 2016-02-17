@@ -1,0 +1,29 @@
+---
+- name: add mesos repository key
+  apt_key:
+    id: "{{ mesos_apt_key_sig }}"
+    keyserver: "{{ mesos_apt_key_url }}"
+    state: present
+  register: add_repository_key
+  ignore_errors: true
+
+- name: add messos repository and update apt cache
+  apt_repository:
+    repo: "{{ mesos_apt_repository }}"
+    update_cache: yes
+    state: present
+
+- name: add debian backports repository and update apt cache
+  apt_repository:
+    repo: "deb http://http.debian.net/debian jessie-backports main"
+    update_cache: yes
+    state: present
+
+- name: install (or update) mesos package
+  apt:
+    name: "{{ item }}"
+    state: "{{ 'latest' if update_mesos_package else 'present' }}"
+    update_cache: yes
+  with_items:
+    - mesos
+    - marathon

@@ -1,0 +1,20 @@
+---
+- name: start mesos master service
+  service:
+    name: mesos-master
+    state: started
+
+- name: start mesos slave service
+  service:
+    name: mesos-slave
+    state: started
+
+- name: restart mesos master service
+  service:
+    name: mesos-master
+    state: restarted
+
+- name: restart mesos slave service
+  service:
+    name: mesos-slave
+    state: restarted

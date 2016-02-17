@@ -1,0 +1,11 @@
+---
+# apt repository key
+mesos_apt_key_url: keyserver.ubuntu.com
+# apt repository key signature
+mesos_apt_key_sig: E56151BF
+
+# Line to be added to sources docker.list (release specific)
+mesos_apt_repository: deb http://repos.mesosphere.com/debian {{ ansible_distribution_release }} main
+
+# Set to 'yes' or 'true' to enable updates (sets 'latest' in apt module)
+update_mesos_package: yes
