@@ -1,0 +1,31 @@
+---
+disk_additional_disks:
+- disk: /dev/sda
+  disk_map: data1
+  fstype: xfs
+  mount_options: defaults
+  mount: /mnt/data1
+- disk: /dev/sdb
+  disk_map: data2
+  fstype: xfs
+  mount_options: defaults
+  mount: /mnt/data2
+- disk: /dev/sdc
+  disk_map: parity1
+  fstype: xfs
+  mount_options: defaults
+  mount: /mnt/parity1
+snapraidconf: /etc/snapraid.conf
+rsnapshotconf: /etc/rsnapshot.conf
+snapraid_primary_parity: /mnt/parity1/snapraid.parity
+snapraid_content_locations:
+  - /var/snapraid.content
+data_drives:
+  - /mnt/data1
+  - /mnt/data2
+exclude_items:
+  - "*.unrecoverable"
+  - "/tmp/"
+  - "/lost+found/"
+snapraid_blocksize: 256
+snapraid_autosave: 500

@@ -1,16 +1,2 @@
 ---
 snapraidversion: "9.3"
-snapraidconf: /etc/snapraid.conf
-rsnapshotconf: /etc/rsnapshot.conf
-snapraid_primary_parity: /mnt/diskp/snapraid.parity
-snapraid_content_locations:
-  - /var/snapraid.content
-data_drives:
-  - /mnt/disk1
-exclude_items:
-  - "*.unrecoverable"
-  - "/tmp/"
-  - "/lost+found/"
-snapraid_blocksize: 256
-snapraid_autosave: 500
-

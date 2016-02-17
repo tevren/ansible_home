@@ -1,5 +1,15 @@
 ---
-# install prereqs
-# configure drives
-# configure fuse drive
-# configure snapraid
+- name: check if baseos is setup (changed=not)
+  command: dpkg-query -W snapraid
+  register: pkg_check
+  failed_when: pkg_check.rc > 1
+  changed_when: pkg_check.rc == 1
+
+- name: setup baseos
+  include: baseos.yml
+  when: pkg_check.rc == 1
+
+- name: install snapraid config
+  template:
+    src: "etc/snapraid.j2"
+    dest: "/etc/snapraid.conf"

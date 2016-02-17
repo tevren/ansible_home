@@ -5,11 +5,7 @@
   failed_when: pkg_check.rc > 1
   changed_when: pkg_check.rc == 1
 
-- name: build snapraid from source in a container
+- name: build snapraid from source
   include: build-src.yml
   when: pkg_check.rc == 1
 
-- name: install snapraid config
-  template:
-    src: "etc/snapraid.j2"
-    dest: "/etc/snapraid.conf"

@@ -1,0 +1,123 @@
+---
+- name: ensure os is up to date
+  apt:
+    update_cache: yes
+    upgrade: full
+    cache_valid_time: 300
+
+- name: install packages
+  apt: pkg={{ item }} state=present
+  with_items:
+    - cryptsetup 
+    - parted 
+    - gdisk 
+    - gcc
+    - git
+    - htop
+    - iftop
+    - iotop
+    - jq
+    - ncdu
+    - nmap
+    - openssh-server
+    - python
+    - tmux
+    - tree
+    - wget
+    - xfsprogs
+
+- name: enable encryption modules
+  shell: "modprobe {{ item }}"
+  with_items:
+    - dm-crypt
+    - aes
+
+
+- name: Copy LUKS keyfile into place
+  copy: 
+    src: keyfile 
+    dest: /root/keyfile
+    owner: root 
+    group: root
+    mode: 0400
+
+- name: "Partition additional disks"
+  shell: |
+    if
+        [ -b {{ item.disk }} ]
+    then
+        [ -b {{ item.disk }}1 ] || parted --script "{{ item.disk }}" mklabel gpt mkpart primary 1MiB 100%
+    fi
+  args:
+    creates: '{{ item.disk }}1'
+    executable: '/bin/bash'
+  with_items: disk_additional_disks
+  tags:
+    - disk
+
+- name: Encrypt first partition
+  shell: "echo yes | cryptsetup luksFormat -c aes-xts-plain64 -s 512 -h sha512 --key-file /root/keyfile {{ item.disk }}1"
+  with_items: disk_additional_disks
+
+- name: Open first partition
+  shell: "cryptsetup luksOpen {{ item.disk }}1 {{ item.disk_map }} --key-file /root/keyfile {{ item.disk }}1"
+  with_items: disk_additional_disks
+  tags:
+    - disk
+
+- name: Create filesystem on the first partition
+  filesystem:
+    dev: '/dev/mapper/{{ item.disk_map }}1'
+    force: '{{ item.force|d(omit) }}'
+    fstype: '{{ item.fstype }}'
+    opts: '{{ item.fsopts|d(omit) }}'
+  with_items: disk_additional_disks
+  tags:
+    - disk
+
+- name: "Ensure the mount directory exists"
+  file: >
+    path={{ item.mount }}
+    owner={{ disk_user | default('root') }}
+    group={{ disk_group | default('root') }}
+    state=directory
+  with_items: disk_additional_disks
+  tags:
+    - disk
+
+- name: Get UUID for partition
+  command: blkid -s UUID -o value "/dev/mapper/{{ item.disk_map }}"
+  register: disk_blkid
+  with_items: disk_additional_disks
+  changed_when: False
+  tags:
+    - disk
+
+- name: "setup crypttab"
+  template:
+    src: "etc/crypttab.j2"
+    dest: "/etc/crypttab"
+
+- name: "Mount additional disk"
+  mount:
+    name: '{{ item.0.mount }}'
+    fstype: '{{ item.0.fstype }}'
+    opts: '{{ item.0.mount_options|d(omit) }}'
+    passno: '0'
+    src: 'UUID={{ item.1.stdout }}'
+    state: '{{ item.0.mount_state|d("mounted") }}'
+  with_together:
+    - '{{ disk_additional_disks }}'
+    - '{{ disk_blkid.results }}'
+  tags:
+    - disk
+
+- name: mount mergerfs array
+  mount:
+    name: /mnt/storage
+    src: /mnt/disk*
+    opts: direct_io,defaults,allow_other,minfreespace=50G,fsname=mergerfs
+    fstype: fuse.mergerfs
+    # change to 'mounted' to auto mount
+    state: present
+
